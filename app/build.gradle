@@ -1,0 +1,38 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.lockedlibrary.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.lockedlibrary.app"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            def ks = System.getenv("KEYSTORE_FILE")
+            storeFile file(ks ?: "release.keystore")
+            storePassword System.getenv("KEYSTORE_PASS") ?: "lockedlibrary"
+            keyAlias System.getenv("KEY_ALIAS") ?: "lockedlibrary"
+            keyPassword System.getenv("KEYSTORE_PASS") ?: "lockedlibrary"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
