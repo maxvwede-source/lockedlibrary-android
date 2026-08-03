@@ -27,6 +27,10 @@ public class MainActivity extends Activity {
 
     private WebView webView;
     private ProgressBar progressBar;
+    private android.widget.TextView errorText;
+    private android.widget.Button retryButton;
+    private android.widget.LinearLayout root;
+    private String appUrl;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -41,13 +45,54 @@ public class MainActivity extends Activity {
         progressBar.setMax(100);
 
         // Stack: progress bar on top, WebView filling the rest
-        android.widget.LinearLayout root = new android.widget.LinearLayout(this);
+        root = new android.widget.LinearLayout(this);
         root.setOrientation(android.widget.LinearLayout.VERTICAL);
         root.addView(progressBar, new android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT));
         root.addView(webView, new android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        errorText = new android.widget.TextView(this);
+        errorText.setText("Can't connect\nPlease check your internet and try again.");
+        errorText.setTextColor(0xFFE2E8F0);
+        errorText.setGravity(android.view.Gravity.CENTER);
+        errorText.setTextSize(18);
+        errorText.setPadding(48, 24, 48, 24);
+
+        retryButton = new android.widget.Button(this);
+        retryButton.setText("Retry");
+        retryButton.setAllCaps(false);
+        retryButton.setTextSize(16);
+        android.graphics.drawable.GradientDrawable btnBg = new android.graphics.drawable.GradientDrawable();
+        btnBg.setColor(0xFF0EA5E9);
+        btnBg.setCornerRadius(40);
+        retryButton.setBackground(btnBg);
+        retryButton.setTextColor(0xFFFFFFFF);
+        android.widget.LinearLayout.LayoutParams btnLp =
+                new android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+        btnLp.gravity = android.view.Gravity.CENTER;
+        retryButton.setLayoutParams(btnLp);
+        retryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                retryButton.setVisibility(View.GONE);
+                errorText.setVisibility(View.GONE);
+                progressBar.setVisibility(View.VISIBLE);
+                webView.setVisibility(View.VISIBLE);
+                webView.loadUrl(appUrl);
+            }
+        });
+        retryButton.setVisibility(View.GONE);
+        errorText.setVisibility(View.GONE);
+
+        root.addView(errorText, new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        root.addView(retryButton, new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT));
+
         setContentView(root);
 
         WebSettings s = webView.getSettings();
@@ -105,11 +150,7 @@ public class MainActivity extends Activity {
                                         android.webkit.WebResourceError error) {
                 // Only show a full error screen if the main frame fails.
                 if (request.isForMainFrame()) {
-                    view.loadUrl("about:blank");
-                    Toast.makeText(MainActivity.this,
-                            "Network error — check your connection and retry.",
-                            Toast.LENGTH_LONG).show();
-                    progressBar.setVisibility(View.GONE);
+                    showErrorScreen();
                 }
             }
         });
@@ -131,7 +172,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        String appUrl = getString(R.string.app_url);
+        appUrl = getString(R.string.app_url);
         webView.loadUrl(appUrl);
     }
 
@@ -154,6 +195,18 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (webView != null) webView.onResume();
+    }
+
+    private void showErrorScreen() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                progressBar.setVisibility(View.GONE);
+                webView.setVisibility(View.GONE);
+                errorText.setVisibility(View.VISIBLE);
+                retryButton.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     @Override
